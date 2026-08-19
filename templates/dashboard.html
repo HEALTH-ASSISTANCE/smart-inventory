@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Smart Inventory System</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+
+    <aside class="sidebar">
+
+        <div class="logo">
+            📦 Smart Inventory
+        </div>
+
+        <nav>
+            <a href="/" class="active">🏠 Dashboard</a>
+            <a href="/products">📦 Products</a>
+            <a href="/reports">📊 Reports</a>
+            <a href="/settings">⚙️ Settings</a>
+        </nav>
+
+    </aside>
+
+
+    <main class="main-content">
+
+        <div class="dashboard-header">
+
+            <div>
+                <h1>Dashboard</h1>
+
+                <p>
+                    Manage your products, stock and inventory value.
+                </p>
+            </div>
+
+            <a href="/add-product">
+                <button>Add Product</button>
+            </a>
+
+        </div>
+
+{% if low_stock > 0 %}
+<div class="alert-banner">
+    ⚠️ <strong>Low Stock Alert:</strong> You have {{ low_stock }} item(s) running low on inventory.
+</div>
+{% endif %}
+        <!-- Statistics -->
+
+        <div class="stats">
+
+            <div class="stat-card">
+                <h3>Total Products</h3>
+                <p>{{ total_products }}</p>
+            </div>
+
+            <div class="stat-card">
+                <h3>Total Stock</h3>
+                <p>{{ total_stock }}</p>
+            </div>
+
+            <div class="stat-card">
+                <h3>Low Stock</h3>
+                <p>{{ low_stock }}</p>
+            </div>
+
+            <div class="stat-card">
+                <h3>Inventory Value</h3>
+                <p>${{ "%.2f"|format(inventory_value) }}</p>
+            </div>
+
+        </div>
+
+
+        <!-- Inventory -->
+
+        <section class="inventory-section">
+
+            <div class="inventory-header">
+
+                <h2>Inventory</h2>
+
+                <form method="GET"
+                      action="/"
+                      class="search-form">
+
+                    <input
+                        type="text"
+                        name="search"
+                        placeholder="Search products..."
+                        value="{{ search }}"
+                    >
+
+                    <button type="submit">
+                        Search
+                    </button>
+
+                </form>
+
+            </div>
+
+
+            <div class="table-wrapper">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+                            <th>ID</th>
+                            <th>Product</th>
+                            <th>Category</th>
+                            <th>Quantity</th>
+                            <th>Price</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+
+
+
+
+                        {% for product in products %}
+    <tr>
+        <td>{{ product["id"] }}</td>
+        <td>{{ product["name"] }}</td>
+        <td>{{ product["category"] }}</td>
+        <td>{{ product["quantity"] }}</td>
+        <td>${{ "%.2f"|format(product["price"]) }}</td>
+        <td>
+            <!-- Status badges... -->
+        </td>
+        
+        <!-- ========================================== -->
+        <!-- REPLACE THE OLD TD BELOW WITH THE NEW CODE -->
+        <!-- ========================================== -->
+        <td>
+            <!-- Quick Stock Adjuster -->
+            <div style="display: flex; gap: 5px; margin-bottom: 5px;">
+                <form method="POST" action="{{ url_for('adjust_stock', id=product['id'], action='decrease') }}" style="display:inline;">
+                    <button type="submit" style="padding: 4px 8px; font-size: 12px; background: #475569;">-</button>
+                </form>
+                <span style="padding: 4px 8px; font-size: 13px; color: #38bdf8;">{{ product["quantity"] }}</span>
+                <form method="POST" action="{{ url_for('adjust_stock', id=product['id'], action='increase') }}" style="display:inline;">
+                    <button type="submit" style="padding: 4px 8px; font-size: 12px; background: #2563eb;">+</button>
+                </form>
+            </div>
+
+            <!-- Existing Actions -->
+            <a href="{{ url_for('edit_product', id=product['id']) }}" class="edit-btn" style="padding: 4px 10px; font-size: 12px;">Edit</a>
+            <form method="POST" action="{{ url_for('delete_product', id=product['id']) }}" class="delete-form">
+                <button type="submit" class="delete-btn" style="padding: 4px 10px; font-size: 12px;" onclick="return confirm('Delete this product?');">Delete</button>
+            </form>
+        </td>
+        <!-- ========================================== -->
+
+    </tr>
+    {% endfor %}
+                        {% for product in products %}
+
+
+
+                        <tr>
+
+                            <td>{{ product["id"] }}</td>
+
+                            <td>{{ product["name"] }}</td>
+
+                            <td>{{ product["category"] }}</td>
+
+                            <td>{{ product["quantity"] }}</td>
+
+                            <td>
+                                ${{ "%.2f"|format(product["price"]) }}
+                            </td>
+
+                            <td>
+
+                                {% if product["quantity"] == 0 %}
+
+                                    <span class="out-of-stock">
+                                        Out of Stock
+                                    </span>
+
+                                {% elif product["quantity"] <= 5 %}
+
+                                    <span class="low-stock">
+                                        Low Stock
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="in-stock">
+                                        In Stock
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+                            <td>
+
+                                <a
+                                    href="{{ url_for('edit_product', id=product['id']) }}"
+                                    class="edit-btn">
+                                    Edit
+                                </a>
+
+                                <form
+                                    method="POST"
+                                    action="{{ url_for('delete_product', id=product['id']) }}"
+                                    class="delete-form">
+
+                                    <button
+                                        type="submit"
+                                        class="delete-btn"
+                                        onclick="return confirm('Delete this product?');">
+                                        Delete
+                                    </button>
+
+                                </form>
+
+                            </td>
+
+                        </tr>
+
+                        {% else %}
+
+                        <tr>
+                            <td colspan="7">
+                                No products found.
+                            </td>
+                        </tr>
+
+                        
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <button class="mobile-menu-btn" id="menuToggle">☰</button>
+
+<script>
+    const menuBtn = document.getElementById('menuToggle');
+    const sidebar = document.querySelector('.sidebar');
+
+    menuBtn.addEventListener('click', () => {
+        sidebar.classList.toggle('open');
+        menuBtn.textContent = sidebar.classList.contains('open') ? '✕' : '☰';
+    });
+
+    // Close menu when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!sidebar.contains(e.target) && !menuBtn.contains(e.target)) {
+            sidebar.classList.remove('open');
+            menuBtn.textContent = '☰';
+        }
+    });
+</script>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+
+</html>
